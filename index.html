@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Literacy Wheel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-light: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #d4af37;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            background-image: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 15px 10px 15px;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            z-index: 50;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            transform: rotate(30deg);
+        }
+
+        h1 {
+            margin: 0;
+            font-family: 'Cinzel', serif;
+            font-size:clamp(24px, 5vw, 32px);
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .stats {
+            display: inline-flex;
+            justify-content: center;
+            gap: clamp(15px, 4vw, 40px);
+            margin-top: 15px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .stats span {
+            color: var(--accent);
+            font-size: 18px;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            width: 100%;
+            max-width: 1000px;
+            padding: 0 20px;
+            box-sizing: border-box;
+            margin-top: 15px;
+        }
+
+        .game-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            max-width: 550px;
+        }
+
+        .sidebar-column {
+            width: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                flex-direction: column;
+                align-items: center;
+                gap: 25px;
+            }
+            .sidebar-column {
+                width: 100%;
+                max-width: 550px;
+            }
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            cursor: crosshair;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+
+        /* --- 3D FLIP CENTER UI ENGINE --- */
+        .center-ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44%;
+            height: 44%;
+            perspective: 1000px;
+            z-index: 10;
+            pointer-events: none; 
+        }
+
+        .center-ui-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 50%;
+        }
+
+        .center-ui-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .center-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15,23,42,0.95) 0%, rgba(15,23,42,1) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+            padding: 12% 16%; 
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        .center-back {
+            transform: rotateY(180deg);
+            background: radial-gradient(circle, rgba(20,30,50,0.95) 0%, rgba(10,15,25,1) 100%);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        .action-required .center-front {
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, rgba(15,23,42,1) 80%);
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.15), 0 10px 30px rgba(0,0,0,0.6);
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0% { box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.15), 0 10px 30px rgba(0,0,0,0.6); }
+            50% { box-shadow: inset 0 0 60px rgba(212, 175, 55, 0.35), 0 10px 40px rgba(0,0,0,0.7); }
+            100% { box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.15), 0 10px 30px rgba(0,0,0,0.6); }
+        }
+
+        .target-prompt {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2px;
+            transition: color 0.3s;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .target-book {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(16px, 5vw, 26px);
+            font-weight: 700;
+            margin: 0;
+            color: #fff;
+            line-height: 1.1;
+            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+        
+        .pulse-anim { animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; text-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .feedback {
+            font-size: 13px;
+            font-weight: 600;
+            min-height: 35px;
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.3s ease;
+            max-width: 100%;
+        }
+        
+        .feedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column; 
+            gap: 8px;
+            margin-top: 8px;
+            pointer-events: auto;
+        }
+
+        .btn-action {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            display: none;
+            transition: transform 0.1s, background 0.2s;
+        }
+        
+        .btn-action.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-action:active { transform: scale(0.95); }
+        .btn-action.show { display: block; }
+
+        .btn-hint-flip {
+            position: absolute;
+            bottom: 12%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: color 0.2s;
+            display: none;
+        }
+        .btn-hint-flip:hover { color: var(--accent); }
+        .btn-hint-flip.show { display: block; }
+
+        .hint-label {
+            font-size: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 6px;
+        }
+        .hint-value {
+            font-size: 12px;
+            color: #fff;
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+        .hint-purpose {
+            font-size: 11px;
+            color: #cbd5e1;
+            line-height: 1.3;
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        .smart-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-width: 350px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            border: 2px solid;
+            border-radius: 16px;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 30; 
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .smart-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .smart-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .smart-modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(16px, 4vw, 22px);
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 0;
+            width: 100%;
+        }
+
+        .smart-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.2s;
+        }
+
+        .smart-modal-close:hover { color: #fff; }
+
+        .smart-modal-body {
+            font-size: 13px;
+            color: #f1f5f9;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .learning-panel {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            box-sizing: border-box;
+        }
+
+        .learning-panel.active {
+            display: flex;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .category-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .book-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .book-pill {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #cbd5e1;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s;
+        }
+
+        .book-pill.target {
+            background: rgba(52, 211, 153, 0.15);
+            border-color: #34d399;
+            color: #34d399;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+        }
+
+        .book-pill.wrong {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: #f43f5e;
+            color: #f43f5e;
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+
+        .legend-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .legend-header {
+            font-family: 'Cinzel', serif;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .legend-items { justify-content: center; }
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .legend-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        /* Cascade Animation Classes */
+        .cascade-enter {
+            opacity: 0;
+            transform: translateY(15px);
+            animation: cascadeAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes cascadeAnim {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .info-icon {
+            font-size: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            margin-left: 2px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-card {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-overlay.active .modal-card { transform: scale(1); }
+        .modal-title { font-family: 'Cinzel', serif; font-size: 22px; color: #fff; margin: 0; }
+        .modal-body { font-size: 14px; color: #cbd5e1; line-height: 1.6; margin: 0; }
+        
+        .modal-save, .modal-cancel {
+            align-self: flex-end; background: rgba(255, 255, 255, 0.1); border: none;
+            color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer;
+            font-weight: 600; font-size: 13px; transition: background 0.2s;
+        }
+        .modal-save:hover, .modal-cancel:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .radio-group { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+        .radio-label { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+        .radio-label:hover { background: rgba(0,0,0,0.4); border-color: var(--accent); }
+        input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="settings-btn" id="btn-settings" title="Settings">⚙️</button>
+        <h1>Bible Literacy Wheel</h1>
+        <div class="stats" id="game-stats">
+            <div>Round: <span id="round-display">1</span>/10</div>
+            <div>Score: <span id="score-display">0</span></div>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="game-column">
+            <div class="game-container">
+                <canvas id="wheelCanvas" width="800" height="800"></canvas>
+                
+                <div class="center-ui" id="center-ui">
+                    <div class="center-ui-inner" id="center-flipper">
+                        <div class="center-face center-front">
+                            <div class="target-prompt" id="prompt-text">Welcome</div>
+                            <div class="target-book pulse-anim" id="target-book-display">Loading...</div>
+                            <div class="feedback" id="feedback-display"></div>
+                            
+                            <div class="button-group">
+                                <button class="btn-action secondary" id="btn-explore">Explore Map</button>
+                                <button class="btn-action" id="btn-next">Next Round</button>
+                                <button class="btn-action" id="btn-restart">Play Again</button>
+                            </div>
+                            
+                            <button class="btn-hint-flip" id="btn-hint-front" title="Flip for Hint">↺ Hint</button>
+                        </div>
+                        <div class="center-face center-back">
+                            <div class="hint-label">Author</div>
+                            <div class="hint-value" id="hint-author"></div>
+                            <div class="hint-label">Date</div>
+                            <div class="hint-value" id="hint-date"></div>
+                            <div class="hint-label">Purpose</div>
+                            <div class="hint-purpose" id="hint-purpose"></div>
+                            <button class="btn-hint-flip" id="btn-hint-back" style="display:block;" title="Return">↺ Return</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="smart-modal" class="smart-modal">
+                    <button class="smart-modal-close" id="smart-modal-close-btn">&times;</button>
+                    <div class="smart-modal-header">
+                        <div class="smart-modal-title" id="smart-modal-title-text">Category</div>
+                    </div>
+                    <p class="smart-modal-body" id="smart-modal-body-text">Overview text</p>
+                </div>
+            </div>
+
+            <div id="learning-panel" class="learning-panel"></div>
+        </div>
+
+        <div class="sidebar-column">
+            <div class="legend" id="legend-container">
+                <div class="legend-section" id="legend-ot">
+                    <div class="legend-header">Old Testament</div>
+                    <div class="legend-items"></div>
+                </div>
+                <div class="legend-section" id="legend-nt">
+                    <div class="legend-header">New Testament</div>
+                    <div class="legend-items"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card">
+            <div class="modal-title">⚙️ Settings</div>
+            <p class="modal-body">Choose your preferred Old Testament structure. Changing this will restart your current game.</p>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="ot_mode" value="traditional" checked>
+                    <div>
+                        <strong>Traditional (Christian)</strong>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Law, History, Wisdom, Major Prophets, Minor Prophets.</div>
+                    </div>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="ot_mode" value="tanakh">
+                    <div>
+                        <strong>Tanakh (Hebrew Bible)</strong>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Torah, Nevi'im (Prophets), Ketuvim (Writings).</div>
+                    </div>
+                </label>
+            </div>
+            <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button class="modal-cancel" id="settings-cancel-btn">Cancel</button>
+                <button class="modal-save" id="settings-save-btn" style="background:var(--accent); color:#000;">Apply & Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bookHints = {
+            "Genesis": { a: "Moses", d: "c. 1440 BC", p: "To record the creation and the origins of Israel's covenant." },
+            "Exodus": { a: "Moses", d: "c. 1440 BC", p: "To record Israel's deliverance from Egypt and the giving of the Law." },
+            "Leviticus": { a: "Moses", d: "c. 1440 BC", p: "To instruct priests and the people on holy worship and living." },
+            "Numbers": { a: "Moses", d: "c. 1400 BC", p: "To detail the wilderness wanderings and God's discipline." },
+            "Deuteronomy": { a: "Moses", d: "c. 1400 BC", p: "Moses' final sermons to renew the covenant with the next generation." },
+            "Joshua": { a: "Joshua", d: "c. 1350 BC", p: "To record the conquest and division of the Promised Land." },
+            "Judges": { a: "Samuel", d: "c. 1000 BC", p: "To record Israel's cycles of apostasy, judgment, and deliverance." },
+            "Ruth": { a: "Unknown", d: "c. 1000 BC", p: "A story of redemption establishing the lineage of King David." },
+            "1 Samuel": { a: "Unknown", d: "c. 900 BC", p: "To record the transition from judges to the monarchy of Saul and David." },
+            "2 Samuel": { a: "Unknown", d: "c. 900 BC", p: "To detail the reign and covenant of King David." },
+            "1 Kings": { a: "Jeremiah", d: "c. 550 BC", p: "To record Solomon's reign and the tragic division of the kingdom." },
+            "2 Kings": { a: "Jeremiah", d: "c. 550 BC", p: "To record the decline, fall, and exile of both Israel and Judah." },
+            "1 Chronicles": { a: "Ezra", d: "c. 450 BC", p: "To encourage returning exiles with David's spiritual history." },
+            "2 Chronicles": { a: "Ezra", d: "c. 450 BC", p: "To detail the kings of Judah and the destruction of the temple." },
+            "Ezra": { a: "Ezra", d: "c. 450 BC", p: "To record the return from exile and the rebuilding of the temple." },
+            "Nehemiah": { a: "Nehemiah", d: "c. 430 BC", p: "To record the rebuilding of Jerusalem's walls and spiritual revival." },
+            "Esther": { a: "Unknown", d: "c. 400 BC", p: "To show God's hidden providence in saving the Jews from genocide." },
+            "Job": { a: "Unknown", d: "c. 2000 BC?", p: "To explore the problem of suffering and the absolute sovereignty of God." },
+            "Psalms": { a: "David, Asaph, etc.", d: "1400–450 BC", p: "A collection of inspired songs for worship, praise, and lament." },
+            "Proverbs": { a: "Solomon", d: "c. 900 BC", p: "To provide practical wisdom and instruction for holy, everyday living." },
+            "Ecclesiastes": { a: "Solomon", d: "c. 930 BC", p: "To demonstrate the vanity of earthly life lived apart from God." },
+            "Song of Solomon": { a: "Solomon", d: "c. 950 BC", p: "A poetic celebration of marital love and intimacy." },
+            "Isaiah": { a: "Isaiah", d: "c. 700 BC", p: "To warn of judgment and promise salvation through the coming Messiah." },
+            "Jeremiah": { a: "Jeremiah", d: "c. 600 BC", p: "The weeping prophet's final plea for Judah to repent before the exile." },
+            "Lamentations": { a: "Jeremiah", d: "c. 586 BC", p: "To mourn the tragic destruction of Jerusalem and the temple." },
+            "Ezekiel": { a: "Ezekiel", d: "c. 590 BC", p: "To pronounce judgment on Judah and promise a glorious future restoration." },
+            "Daniel": { a: "Daniel", d: "c. 530 BC", p: "To show God's absolute sovereignty over all earthly nations." },
+            "Hosea": { a: "Hosea", d: "c. 715 BC", p: "To illustrate God's faithful, pursuing love for an unfaithful people." },
+            "Joel": { a: "Joel", d: "c. 835 BC", p: "To warn of the Day of the Lord and promise the outpouring of the Spirit." },
+            "Amos": { a: "Amos", d: "c. 750 BC", p: "To denounce social injustice and demand true, heartfelt worship." },
+            "Obadiah": { a: "Obadiah", d: "c. 586 BC", p: "To prophesy judgment against Edom for their cruelty to Judah." },
+            "Jonah": { a: "Jonah", d: "c. 760 BC", p: "To show the boundless scope of God's grace, even to Gentile enemies." },
+            "Micah": { a: "Micah", d: "c. 700 BC", p: "To warn of judgment and promise a Shepherd-King from Bethlehem." },
+            "Nahum": { a: "Nahum", d: "c. 650 BC", p: "To pronounce the impending, righteous destruction of wicked Nineveh." },
+            "Habakkuk": { a: "Habakkuk", d: "c. 605 BC", p: "A dialogue on trusting God's justice in a world filled with evil." },
+            "Zephaniah": { a: "Zephaniah", d: "c. 625 BC", p: "To warn of global judgment and the purification of a faithful remnant." },
+            "Haggai": { a: "Haggai", d: "c. 520 BC", p: "To exhort the returned exiles to prioritize rebuilding God's temple." },
+            "Zechariah": { a: "Zechariah", d: "c. 520 BC", p: "To encourage the builders with apocalyptic visions of the coming Messiah." },
+            "Malachi": { a: "Malachi", d: "c. 430 BC", p: "To call a backsliding Israel to repentance before the Lord returns." },
+            "Matthew": { a: "Matthew", d: "c. 60 AD", p: "To prove to a Jewish audience that Jesus is the promised Messianic King." },
+            "Mark": { a: "Mark", d: "c. 55 AD", p: "To present Jesus to Romans as the active, suffering Servant of God." },
+            "Luke": { a: "Luke", d: "c. 60 AD", p: "To provide a highly accurate account of Jesus as the Savior for all people." },
+            "John": { a: "John", d: "c. 90 AD", p: "To prove Jesus is the divine Son of God, that believing, you may have life." },
+            "Acts": { a: "Luke", d: "c. 62 AD", p: "To record the descent of the Spirit and the rapid spread of the early Church." },
+            "Romans": { a: "Paul", d: "c. 57 AD", p: "To provide a systematic theological explanation of the Gospel of grace." },
+            "1 Corinthians": { a: "Paul", d: "c. 55 AD", p: "To correct severe worldly behaviors and divisions in the Corinthian church." },
+            "2 Corinthians": { a: "Paul", d: "c. 56 AD", p: "To defend Paul's apostolic authority and explain the nature of ministry." },
+            "Galatians": { a: "Paul", d: "c. 49 AD", p: "To fiercely defend justification by faith alone, apart from the Law." },
+            "Ephesians": { a: "Paul", d: "c. 60 AD", p: "To explain the believer's spiritual blessings and unity in Christ's body." },
+            "Philippians": { a: "Paul", d: "c. 61 AD", p: "A joyful letter from prison encouraging unity, humility, and rejoicing." },
+            "Colossians": { a: "Paul", d: "c. 60 AD", p: "To combat heresy by declaring the absolute supremacy and sufficiency of Christ." },
+            "1 Thessalonians": { a: "Paul", d: "c. 51 AD", p: "To comfort believers facing persecution and clarify Christ's return." },
+            "2 Thessalonians": { a: "Paul", d: "c. 51 AD", p: "To correct false teachings claiming the Day of the Lord had already come." },
+            "1 Timothy": { a: "Paul", d: "c. 64 AD", p: "To instruct a young pastor on church leadership and sound doctrine." },
+            "2 Timothy": { a: "Paul", d: "c. 67 AD", p: "Paul's final charge to boldly endure suffering and preach the Word." },
+            "Titus": { a: "Paul", d: "c. 64 AD", p: "To instruct Titus on organizing churches and appointing qualified elders." },
+            "Philemon": { a: "Paul", d: "c. 60 AD", p: "A personal plea for a master to forgive and accept his runaway slave." },
+            "Hebrews": { a: "Unknown", d: "c. 65 AD", p: "To prove the absolute superiority of Christ over the Old Covenant system." },
+            "James": { a: "James", d: "c. 45 AD", p: "To emphasize that genuine, saving faith must result in practical obedience." },
+            "1 Peter": { a: "Peter", d: "c. 60 AD", p: "To encourage believers to endure suffering faithfully for the sake of Christ." },
+            "2 Peter": { a: "Peter", d: "c. 65 AD", p: "To warn the church against destructive false teachers and scoffers." },
+            "1 John": { a: "John", d: "c. 90 AD", p: "To provide tests of genuine fellowship with God and assurance of salvation." },
+            "2 John": { a: "John", d: "c. 90 AD", p: "To warn against showing hospitality to traveling deceivers." },
+            "3 John": { a: "John", d: "c. 90 AD", p: "To praise Gaius for his faithful hospitality and condemn Diotrephes." },
+            "Jude": { a: "Jude", d: "c. 65 AD", p: "An urgent call to contend earnestly for the faith against apostates." },
+            "Revelation": { a: "John", d: "c. 95 AD", p: "To reveal the ultimate cosmic triumph of Jesus Christ and His eternal kingdom." }
+        };
+
+        const sectionOverviews = {
+            "Law": "The Law (or Pentateuch) comprises the first 5 books. It outlines creation, the patriarchs, and the founding of Israel through the covenant at Sinai.",
+            "History (OT)": "The Historical books cover over a thousand years—from entering the Promised Land, through the Kings, into exile, and the return to rebuild Jerusalem.",
+            "Wisdom": "Wisdom and Poetry offers practical guidance, worship, and reflections on human suffering. It includes Psalms, Proverbs, and deep philosophical inquiries.",
+            "Major Prophets": "The Major Prophets contain extended messages delivered during times of crisis, warning of judgment while offering glowing promises of the coming Messiah.",
+            "Minor Prophets": "The Minor Prophets (the Twelve) feature shorter prophetic books calling God's people to repentance and forecasting the ultimate Day of the Lord.",
+            "Torah": "The foundational texts of the Jewish people, outlining creation, the patriarchs, the exodus from Egypt, and the divine instruction given at Sinai.",
+            "Nevi'im": "The Prophets. This section covers the historical entry into Canaan, the monarchy, and the powerful poetic warnings and comforts from the prophets.",
+            "Ketuvim": "The Writings. A diverse collection of poetic books, wisdom literature, and historical texts including Psalms, Proverbs, and the chronicles of Israel.",
+            "Gospels": "The Gospels present the life, teachings, miraculous ministry, sacrificial death, and bodily resurrection of Jesus Christ.",
+            "History (NT)": "The Book of Acts tracks the descent of the Holy Spirit and the rapid expansion of the early church from Jerusalem to the ends of the Roman Empire.",
+            "Pauline Epistles": "Letters written by the Apostle Paul to early churches. They define Christian doctrine and offer practical instructions on holy living.",
+            "General Epistles": "Letters written by other leaders like James, Peter, and John. They address general audiences facing persecution and false teachings.",
+            "Prophecy (NT)": "Revelation uses rich apocalyptic imagery to comfort persecuted believers and unveil the ultimate cosmic victory of Jesus Christ."
+        };
+
+        const colors = {
+            "Law": "#b91c1c", "History (OT)": "#d97706", "Wisdom": "#15803d", "Major Prophets": "#6d28d9", "Minor Prophets": "#4338ca",
+            "Torah": "#b91c1c", "Nevi'im": "#d97706", "Ketuvim": "#15803d",
+            "Gospels": "#b91c1c", "History (NT)": "#d97706", "Pauline Epistles": "#15803d", "General Epistles": "#6d28d9", "Prophecy (NT)": "#4338ca"
+        };
+
+        const ntBooks = [
+            { name: "Matthew", ch: 28, cat: "Gospels", testament: "NT" }, { name: "Mark", ch: 16, cat: "Gospels", testament: "NT" }, { name: "Luke", ch: 24, cat: "Gospels", testament: "NT" }, { name: "John", ch: 21, cat: "Gospels", testament: "NT" },
+            { name: "Acts", ch: 28, cat: "History (NT)", testament: "NT" },
+            { name: "Romans", ch: 16, cat: "Pauline Epistles", testament: "NT" }, { name: "1 Corinthians", ch: 16, cat: "Pauline Epistles", testament: "NT" }, { name: "2 Corinthians", ch: 13, cat: "Pauline Epistles", testament: "NT" }, { name: "Galatians", ch: 6, cat: "Pauline Epistles", testament: "NT" }, { name: "Ephesians", ch: 6, cat: "Pauline Epistles", testament: "NT" }, { name: "Philippians", ch: 4, cat: "Pauline Epistles", testament: "NT" }, { name: "Colossians", ch: 4, cat: "Pauline Epistles", testament: "NT" }, { name: "1 Thessalonians", ch: 5, cat: "Pauline Epistles", testament: "NT" }, { name: "2 Thessalonians", ch: 3, cat: "Pauline Epistles", testament: "NT" }, { name: "1 Timothy", ch: 6, cat: "Pauline Epistles", testament: "NT" }, { name: "2 Timothy", ch: 4, cat: "Pauline Epistles", testament: "NT" }, { name: "Titus", ch: 3, cat: "Pauline Epistles", testament: "NT" }, { name: "Philemon", ch: 1, cat: "Pauline Epistles", testament: "NT" },
+            { name: "Hebrews", ch: 13, cat: "General Epistles", testament: "NT" }, { name: "James", ch: 5, cat: "General Epistles", testament: "NT" }, { name: "1 Peter", ch: 5, cat: "General Epistles", testament: "NT" }, { name: "2 Peter", ch: 3, cat: "General Epistles", testament: "NT" }, { name: "1 John", ch: 5, cat: "General Epistles", testament: "NT" }, { name: "2 John", ch: 1, cat: "General Epistles", testament: "NT" }, { name: "3 John", ch: 1, cat: "General Epistles", testament: "NT" }, { name: "Jude", ch: 1, cat: "General Epistles", testament: "NT" },
+            { name: "Revelation", ch: 22, cat: "Prophecy (NT)", testament: "NT" }
+        ];
+
+        const otTraditionalBooks = [
+            { name: "Genesis", ch: 50, cat: "Law", testament: "OT" }, { name: "Exodus", ch: 40, cat: "Law", testament: "OT" }, { name: "Leviticus", ch: 27, cat: "Law", testament: "OT" }, { name: "Numbers", ch: 36, cat: "Law", testament: "OT" }, { name: "Deuteronomy", ch: 34, cat: "Law", testament: "OT" },
+            { name: "Joshua", ch: 24, cat: "History (OT)", testament: "OT" }, { name: "Judges", ch: 21, cat: "History (OT)", testament: "OT" }, { name: "Ruth", ch: 4, cat: "History (OT)", testament: "OT" }, { name: "1 Samuel", ch: 31, cat: "History (OT)", testament: "OT" }, { name: "2 Samuel", ch: 24, cat: "History (OT)", testament: "OT" }, { name: "1 Kings", ch: 22, cat: "History (OT)", testament: "OT" }, { name: "2 Kings", ch: 25, cat: "History (OT)", testament: "OT" }, { name: "1 Chronicles", ch: 29, cat: "History (OT)", testament: "OT" }, { name: "2 Chronicles", ch: 36, cat: "History (OT)", testament: "OT" }, { name: "Ezra", ch: 10, cat: "History (OT)", testament: "OT" }, { name: "Nehemiah", ch: 13, cat: "History (OT)", testament: "OT" }, { name: "Esther", ch: 10, cat: "History (OT)", testament: "OT" },
+            { name: "Job", ch: 42, cat: "Wisdom", testament: "OT" }, { name: "Psalms", ch: 150, cat: "Wisdom", testament: "OT" }, { name: "Proverbs", ch: 31, cat: "Wisdom", testament: "OT" }, { name: "Ecclesiastes", ch: 12, cat: "Wisdom", testament: "OT" }, { name: "Song of Solomon", ch: 8, cat: "Wisdom", testament: "OT" },
+            { name: "Isaiah", ch: 66, cat: "Major Prophets", testament: "OT" }, { name: "Jeremiah", ch: 52, cat: "Major Prophets", testament: "OT" }, { name: "Lamentations", ch: 5, cat: "Major Prophets", testament: "OT" }, { name: "Ezekiel", ch: 48, cat: "Major Prophets", testament: "OT" }, { name: "Daniel", ch: 12, cat: "Major Prophets", testament: "OT" },
+            { name: "Hosea", ch: 14, cat: "Minor Prophets", testament: "OT" }, { name: "Joel", ch: 3, cat: "Minor Prophets", testament: "OT" }, { name: "Amos", ch: 9, cat: "Minor Prophets", testament: "OT" }, { name: "Obadiah", ch: 1, cat: "Minor Prophets", testament: "OT" }, { name: "Jonah", ch: 4, cat: "Minor Prophets", testament: "OT" }, { name: "Micah", ch: 7, cat: "Minor Prophets", testament: "OT" }, { name: "Nahum", ch: 3, cat: "Minor Prophets", testament: "OT" }, { name: "Habakkuk", ch: 3, cat: "Minor Prophets", testament: "OT" }, { name: "Zephaniah", ch: 3, cat: "Minor Prophets", testament: "OT" }, { name: "Haggai", ch: 2, cat: "Minor Prophets", testament: "OT" }, { name: "Zechariah", ch: 14, cat: "Minor Prophets", testament: "OT" }, { name: "Malachi", ch: 4, cat: "Minor Prophets", testament: "OT" }
+        ];
+
+        const otTanakhBooks = [
+            { name: "Genesis", ch: 50, cat: "Torah", testament: "OT" }, { name: "Exodus", ch: 40, cat: "Torah", testament: "OT" }, { name: "Leviticus", ch: 27, cat: "Torah", testament: "OT" }, { name: "Numbers", ch: 36, cat: "Torah", testament: "OT" }, { name: "Deuteronomy", ch: 34, cat: "Torah", testament: "OT" },
+            { name: "Joshua", ch: 24, cat: "Nevi'im", testament: "OT" }, { name: "Judges", ch: 21, cat: "Nevi'im", testament: "OT" }, { name: "1 Samuel", ch: 31, cat: "Nevi'im", testament: "OT" }, { name: "2 Samuel", ch: 24, cat: "Nevi'im", testament: "OT" }, { name: "1 Kings", ch: 22, cat: "Nevi'im", testament: "OT" }, { name: "2 Kings", ch: 25, cat: "Nevi'im", testament: "OT" }, { name: "Isaiah", ch: 66, cat: "Nevi'im", testament: "OT" }, { name: "Jeremiah", ch: 52, cat: "Nevi'im", testament: "OT" }, { name: "Ezekiel", ch: 48, cat: "Nevi'im", testament: "OT" }, { name: "Hosea", ch: 14, cat: "Nevi'im", testament: "OT" }, { name: "Joel", ch: 3, cat: "Nevi'im", testament: "OT" }, { name: "Amos", ch: 9, cat: "Nevi'im", testament: "OT" }, { name: "Obadiah", ch: 1, cat: "Nevi'im", testament: "OT" }, { name: "Jonah", ch: 4, cat: "Nevi'im", testament: "OT" }, { name: "Micah", ch: 7, cat: "Nevi'im", testament: "OT" }, { name: "Nahum", ch: 3, cat: "Nevi'im", testament: "OT" }, { name: "Habakkuk", ch: 3, cat: "Nevi'im", testament: "OT" }, { name: "Zephaniah", ch: 3, cat: "Nevi'im", testament: "OT" }, { name: "Haggai", ch: 2, cat: "Nevi'im", testament: "OT" }, { name: "Zechariah", ch: 14, cat: "Nevi'im", testament: "OT" }, { name: "Malachi", ch: 4, cat: "Nevi'im", testament: "OT" },
+            { name: "Psalms", ch: 150, cat: "Ketuvim", testament: "OT" }, { name: "Proverbs", ch: 31, cat: "Ketuvim", testament: "OT" }, { name: "Job", ch: 42, cat: "Ketuvim", testament: "OT" }, { name: "Song of Solomon", ch: 8, cat: "Ketuvim", testament: "OT" }, { name: "Ruth", ch: 4, cat: "Ketuvim", testament: "OT" }, { name: "Lamentations", ch: 5, cat: "Ketuvim", testament: "OT" }, { name: "Ecclesiastes", ch: 12, cat: "Ketuvim", testament: "OT" }, { name: "Esther", ch: 10, cat: "Ketuvim", testament: "OT" }, { name: "Daniel", ch: 12, cat: "Ketuvim", testament: "OT" }, { name: "Ezra", ch: 10, cat: "Ketuvim", testament: "OT" }, { name: "Nehemiah", ch: 13, cat: "Ketuvim", testament: "OT" }, { name: "1 Chronicles", ch: 29, cat: "Ketuvim", testament: "OT" }, { name: "2 Chronicles", ch: 36, cat: "Ketuvim", testament: "OT" }
+        ];
+
+        // --- GAME STATE ---
+        let currentMode = 'traditional';
+        let booksData = [];
+        let currentCategories = [];
+        let currentTargetIndex = 0;
+        let score = 0;
+        let round = 1;
+        const maxRounds = 10;
+        
+        let waitingForNextRound = false;
+        let isWaitingToStart = false; 
+        let isExplorationMode = false;
+        let isIntroPlaying = false;
+        
+        let revealedCategories = []; 
+        let revealedIntroCategories = []; // Tracks which parts of the wheel are colored during intro
+        let modalActiveCategory = null; 
+        let currentHoverIndex = -1; 
+        let categoryStats = {};
+
+        // --- DOM ELEMENTS ---
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const targetDisplay = document.getElementById('target-book-display');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const scoreDisplay = document.getElementById('score-display');
+        const roundDisplay = document.getElementById('round-display');
+        const promptText = document.getElementById('prompt-text');
+        const btnNext = document.getElementById('btn-next');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnExplore = document.getElementById('btn-explore');
+        const centerUi = document.getElementById('center-ui');
+        const centerFlipper = document.getElementById('center-flipper');
+        const btnHintFront = document.getElementById('btn-hint-front');
+        const btnHintBack = document.getElementById('btn-hint-back');
+        
+        const hintAuthor = document.getElementById('hint-author');
+        const hintDate = document.getElementById('hint-date');
+        const hintPurpose = document.getElementById('hint-purpose');
+
+        const learningPanel = document.getElementById('learning-panel');
+        const gameStatsHeader = document.getElementById('game-stats');
+        
+        const smartModal = document.getElementById('smart-modal');
+        const smartModalTitleText = document.getElementById('smart-modal-title-text');
+        const smartModalBodyText = document.getElementById('smart-modal-body-text');
+        const smartModalCloseBtn = document.getElementById('smart-modal-close-btn');
+        const settingsModal = document.getElementById('settings-modal');
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            booksData = currentMode === 'traditional' ? [...otTraditionalBooks, ...ntBooks] : [...otTanakhBooks, ...ntBooks];
+            currentCategories = [...new Set(booksData.map(b => b.cat))];
+
+            const totalChapters = booksData.reduce((sum, book) => sum + book.ch, 0);
+            let currentAngle = 0;
+            booksData.forEach((book) => {
+                const angleSpan = (book.ch / totalChapters) * (2 * Math.PI);
+                book.startAngle = currentAngle;
+                book.endAngle = currentAngle + angleSpan;
+                book.midAngle = currentAngle + (angleSpan / 2);
+                currentAngle += angleSpan;
+            });
+            
+            score = 0;
+            round = 1;
+            isExplorationMode = false;
+            isWaitingToStart = false;
+            scoreDisplay.innerText = "0";
+            categoryStats = {};
+            currentCategories.forEach(cat => categoryStats[cat] = { hits: 0, total: 0 });
+
+            btnRestart.classList.remove('show');
+            btnExplore.classList.remove('show');
+            btnHintFront.classList.remove('show');
+            centerFlipper.classList.remove('flipped');
+            feedbackDisplay.classList.remove('show');
+            gameStatsHeader.style.opacity = '1';
+            learningPanel.classList.remove('active');
+            document.getElementById('legend-container').classList.remove('hidden');
+
+            playSynchronizedIntro();
+        }
+
+        // --- NEW SYNCHRONIZED INTRO ANIMATION ---
+        function playSynchronizedIntro() {
+            isIntroPlaying = true;
+            modalActiveCategory = null;
+            revealedIntroCategories = [];
+            
+            // Clear legends entirely
+            document.querySelector('#legend-ot .legend-items').innerHTML = '';
+            document.querySelector('#legend-nt .legend-items').innerHTML = '';
+            
+            // Static Center Text immediately applied
+            promptText.innerText = "Ready?";
+            promptText.style.color = "var(--text-muted)";
+            targetDisplay.innerText = "Click to Start";
+            targetDisplay.style.color = "#fff";
+            targetDisplay.classList.add('pulse-anim');
+            centerUi.classList.remove('action-required'); // Keep glow off until complete
+
+            let step = 0;
+            const totalSteps = currentCategories.length;
+            
+            const interval = setInterval(() => {
+                if (step < totalSteps) {
+                    const cat = currentCategories[step];
+                    revealedIntroCategories.push(cat); // Unlocks color on the wheel
+                    
+                    // Create and append the legend pill synchronously
+                    const color = colors[cat];
+                    const item = document.createElement('div');
+                    item.className = 'legend-item cascade-enter';
+                    item.innerHTML = `
+                        <div class="color-dot" style="background-color: ${color}; color: ${color};"></div>
+                        <span>${cat}</span>
+                        <div class="info-icon">i</div>
+                    `;
+                    item.addEventListener('click', () => openCategoryOverview(cat, color));
+                    
+                    const sampleBook = booksData.find(b => b.cat === cat);
+                    if (sampleBook.testament === "OT") {
+                        document.querySelector('#legend-ot .legend-items').appendChild(item);
+                    } else {
+                        document.querySelector('#legend-nt .legend-items').appendChild(item);
+                    }
+
+                    drawWheel(); // Redraws wheel with newly revealed slice
+                    step++;
+                } else {
+                    clearInterval(interval);
+                    isIntroPlaying = false;
+                    isWaitingToStart = true;
+                    centerUi.classList.add('action-required'); // Turn on golden glow
+                    drawWheel(); // Final redraw just in case
+                }
+            }, 150); // 150ms creates a crisp, fast cascade
+        }
+
+        // --- SMART OVERLAY LOGIC ---
+        function openCategoryOverview(catName, color) {
+            if (isExplorationMode || isIntroPlaying) return; 
+            
+            modalActiveCategory = catName;
+            smartModalTitleText.innerText = catName;
+            smartModalTitleText.style.color = color;
+            smartModal.style.borderColor = color;
+            smartModalBodyText.innerText = sectionOverviews[catName] || "Overview coming soon.";
+            
+            centerUi.style.opacity = '0';
+            smartModal.classList.add('active');
+            drawWheel(); 
+        }
+
+        function closeOverviewModal() {
+            smartModal.classList.remove('active');
+            modalActiveCategory = null;
+            centerUi.style.opacity = '1';
+            drawWheel(); 
+        }
+
+        smartModalCloseBtn.addEventListener('click', closeOverviewModal);
+
+        // --- FLIP LOGIC ---
+        btnHintFront.addEventListener('click', () => centerFlipper.classList.add('flipped'));
+        btnHintBack.addEventListener('click', () => centerFlipper.classList.remove('flipped'));
+
+        // --- SETTINGS ---
+        document.getElementById('btn-settings').addEventListener('click', () => settingsModal.classList.add('active'));
+        document.getElementById('settings-cancel-btn').addEventListener('click', () => settingsModal.classList.remove('active'));
+        document.getElementById('settings-save-btn').addEventListener('click', () => {
+            const selectedMode = document.querySelector('input[name="ot_mode"]:checked').value;
+            if(selectedMode !== currentMode) { currentMode = selectedMode; initGame(); }
+            settingsModal.classList.remove('active');
+        });
+
+        // --- DRAWING ENGINE ---
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const outerRadius = 380;
+        const innerRadius = 180;
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 1. Draw solid fills
+            booksData.forEach((book, index) => {
+                ctx.beginPath();
+                ctx.arc(cx, cy, outerRadius, book.startAngle - Math.PI/2, book.endAngle - Math.PI/2);
+                ctx.arc(cx, cy, innerRadius, book.endAngle - Math.PI/2, book.startAngle - Math.PI/2, true);
+                ctx.closePath();
+                
+                let isDimmed = false;
+                
+                if (modalActiveCategory && book.cat !== modalActiveCategory) {
+                    isDimmed = true;
+                } else if (isIntroPlaying) {
+                    if (!revealedIntroCategories.includes(book.cat)) isDimmed = true;
+                } else if (!isExplorationMode && !isIntroPlaying && !isWaitingToStart && !modalActiveCategory && revealedCategories.length > 0 && !revealedCategories.includes(book.cat)) {
+                    isDimmed = true;
+                }
+
+                if (isDimmed) {
+                    ctx.fillStyle = "#1e293b"; 
+                    ctx.fill();
+                    ctx.fillStyle = "rgba(0,0,0,0.6)"; 
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = colors[book.cat];
+                    ctx.fill();
+                }
+                
+                if (isExplorationMode && index === currentHoverIndex) {
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+                    ctx.fill();
+                }
+            });
+
+            // 2. Draw sharp boundary lines
+            booksData.forEach((book, index) => {
+                const prevBook = index === 0 ? booksData[booksData.length - 1] : booksData[index - 1];
+                const isCategoryDivider = book.cat !== prevBook.cat;
+                
+                ctx.beginPath();
+                const drawAngle = book.startAngle - Math.PI/2;
+                ctx.moveTo(cx + Math.cos(drawAngle) * innerRadius, cy + Math.sin(drawAngle) * innerRadius);
+                ctx.lineTo(cx + Math.cos(drawAngle) * outerRadius, cy + Math.sin(drawAngle) * outerRadius);
+                
+                if (isCategoryDivider) {
+                    ctx.strokeStyle = "#080c14";
+                    ctx.lineWidth = 2.5; 
+                } else {
+                    ctx.strokeStyle = "rgba(8, 12, 20, 0.4)"; 
+                    ctx.lineWidth = 0.75; 
+                }
+                ctx.stroke();
+            });
+
+            // 3. Draw containing rings
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = "#080c14"; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1; ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = "#080c14"; ctx.lineWidth = 3; ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.lineWidth = 1; ctx.stroke();
+        }
+
+        function drawMarker(angle, color, width, extend) {
+            ctx.beginPath();
+            const rStart = innerRadius - 8;
+            const rEnd = outerRadius + extend;
+            const drawAngle = angle - Math.PI/2;
+            ctx.moveTo(cx + Math.cos(drawAngle) * rStart, cy + Math.sin(drawAngle) * rStart);
+            ctx.lineTo(cx + Math.cos(drawAngle) * rEnd, cy + Math.sin(drawAngle) * rEnd);
+            ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.stroke();
+        }
+
+        function highlightBookHit(bookIndex, hitType) {
+            const book = booksData[bookIndex];
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerRadius, book.startAngle - Math.PI/2, book.endAngle - Math.PI/2);
+            ctx.arc(cx, cy, innerRadius, book.endAngle - Math.PI/2, book.startAngle - Math.PI/2, true);
+            ctx.closePath();
+            
+            if (hitType === 'perfect') { ctx.fillStyle = "rgba(52, 211, 153, 0.5)"; ctx.strokeStyle = "#34d399"; }
+            else if (hitType === 'close') { ctx.fillStyle = "rgba(251, 191, 36, 0.4)"; ctx.strokeStyle = "#fbbf24"; }
+            else { ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.strokeStyle = "#fff"; }
+            
+            ctx.fill(); ctx.lineWidth = 3; ctx.stroke();
+        }
+
+        function showDiagnosticReport() {
+            targetDisplay.classList.remove('pulse-anim');
+            btnHintFront.classList.remove('show');
+            centerFlipper.classList.remove('flipped');
+            
+            let weakestCat = null;
+            let lowestAccuracy = 1.1; 
+            
+            for(let cat in categoryStats) {
+                if(categoryStats[cat].total > 0) {
+                    let accuracy = categoryStats[cat].hits / categoryStats[cat].total;
+                    if(accuracy < lowestAccuracy) { 
+                        lowestAccuracy = accuracy; 
+                        weakestCat = cat; 
+                    }
+                }
+            }
+
+            promptText.innerText = "Final Score";
+            promptText.style.color = "var(--text-muted)";
+            targetDisplay.innerText = `${score} / ${maxRounds * 1000}`;
+            
+            if (weakestCat && lowestAccuracy < 0.8) {
+                feedbackDisplay.innerHTML = `Area for Review:<br><span style="color:${colors[weakestCat]}; font-size:16px;">${weakestCat}</span>`;
+            } else {
+                feedbackDisplay.innerHTML = `<span style="color:#34d399;">Excellent Biblical Knowledge!</span>`;
+            }
+            
+            feedbackDisplay.classList.add('show');
+            btnRestart.classList.add('show');
+            btnExplore.classList.add('show');
+        }
+
+        function startRound() {
+            waitingForNextRound = false;
+            revealedCategories = []; 
+            centerFlipper.classList.remove('flipped');
+            feedbackDisplay.classList.remove('show');
+            btnNext.classList.remove('show');
+            learningPanel.classList.remove('active');
+            document.getElementById('legend-container').classList.remove('hidden');
+            
+            promptText.innerText = "Locate Book";
+            promptText.style.color = "var(--text-muted)";
+            targetDisplay.classList.add('pulse-anim');
+            btnHintFront.classList.add('show'); 
+            
+            if(round > maxRounds) {
+                showDiagnosticReport();
+                return;
+            }
+
+            currentTargetIndex = Math.floor(Math.random() * booksData.length);
+            const targetBook = booksData[currentTargetIndex];
+            
+            targetDisplay.innerText = targetBook.name;
+            roundDisplay.innerText = round;
+            
+            const hintData = bookHints[targetBook.name];
+            if (hintData) {
+                hintAuthor.innerText = hintData.a; hintDate.innerText = hintData.d; hintPurpose.innerText = hintData.p;
+            } else {
+                hintAuthor.innerText = "N/A"; hintDate.innerText = "N/A"; hintPurpose.innerText = "N/A";
+            }
+            drawWheel();
+        }
+
+        function getAngularDistance(targetBook, clickAngle) {
+            if (clickAngle >= targetBook.startAngle && clickAngle <= targetBook.endAngle) return 0;
+            let distToStart = Math.abs(clickAngle - targetBook.startAngle);
+            let distToEnd = Math.abs(clickAngle - targetBook.endAngle);
+            if (distToStart > Math.PI) distToStart = 2 * Math.PI - distToStart;
+            if (distToEnd > Math.PI) distToEnd = 2 * Math.PI - distToEnd;
+            return Math.min(distToStart, distToEnd);
+        }
+
+        function animateScore(start, end) {
+            let current = start;
+            const increment = Math.ceil((end - start) / 15);
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= end) { current = end; clearInterval(timer); }
+                scoreDisplay.innerText = current;
+            }, 30);
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (modalActiveCategory) { closeOverviewModal(); return; }
+
+            if (isWaitingToStart) {
+                isWaitingToStart = false;
+                centerUi.classList.remove('action-required'); 
+                startRound();
+                return;
+            }
+
+            if (isIntroPlaying || isExplorationMode || waitingForNextRound || round > maxRounds) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX - cx;
+            const y = (e.clientY - rect.top) * scaleY - cy;
+
+            const clickRadius = Math.sqrt(x*x + y*y);
+            if (clickRadius < innerRadius || clickRadius > outerRadius + 20) return;
+
+            let angle = Math.atan2(y, x) + Math.PI/2;
+            if (angle < 0) angle += 2 * Math.PI;
+
+            const clickedBook = booksData.find(b => angle >= b.startAngle && angle <= b.endAngle);
+            if (!clickedBook) return;
+
+            waitingForNextRound = true;
+            targetDisplay.classList.remove('pulse-anim');
+            btnHintFront.classList.remove('show');
+            centerFlipper.classList.remove('flipped'); 
+
+            const targetBook = booksData[currentTargetIndex];
+            const radDist = getAngularDistance(targetBook, angle);
+            
+            revealedCategories = [targetBook.cat];
+            if (clickedBook && clickedBook.cat !== targetBook.cat) revealedCategories.push(clickedBook.cat); 
+
+            categoryStats[targetBook.cat].total += 1;
+
+            let points = 0; let hitType = 'miss';
+
+            if (radDist === 0) {
+                points = 1000; hitType = 'perfect'; categoryStats[targetBook.cat].hits += 1;
+                promptText.innerText = "Perfect Hit!"; promptText.style.color = "#34d399";
+                feedbackDisplay.innerHTML = `<span style='color:#34d399;'>+1000 pts</span>`;
+            } else {
+                points = Math.max(0, Math.floor(1000 - (radDist * 1200)));
+                if(points > 0) {
+                    hitType = 'close';
+                    if (points > 500) categoryStats[targetBook.cat].hits += 1; 
+                    promptText.innerText = "Close!"; promptText.style.color = "#fbbf24";
+                    feedbackDisplay.innerHTML = `You clicked ${clickedBook.name}<br><span style='color:#fbbf24;'>+${points} pts</span>`;
+                } else {
+                    promptText.innerText = "Miss!"; promptText.style.color = "#f43f5e";
+                    feedbackDisplay.innerHTML = `You clicked ${clickedBook.name}<br><span style='color:#f43f5e;'>0 pts</span>`;
+                }
+            }
+
+            const oldScore = score;
+            score += points;
+            if (points > 0) animateScore(oldScore, score);
+            
+            feedbackDisplay.classList.add('show');
+            btnNext.classList.add('show');
+
+            drawWheel();
+            highlightBookHit(currentTargetIndex, hitType); 
+            drawMarker(targetBook.midAngle, "#fff", 3, 25);
+            if(radDist > 0) drawMarker(angle, "#f43f5e", 4, 15);
+
+            learningPanel.innerHTML = "";
+            let html = "";
+            const renderCategory = (catName) => {
+                let catHtml = `<div class="category-group"><div class="category-title" style="color: ${colors[catName]}">${catName}</div><div class="book-list">`;
+                booksData.filter(b => b.cat === catName).forEach(b => {
+                    let pillClass = "book-pill";
+                    if (b.name === targetBook.name) pillClass += " target";
+                    else if (clickedBook && b.name === clickedBook.name && b.name !== targetBook.name) pillClass += " wrong";
+                    catHtml += `<span class="${pillClass}">${b.name}</span>`;
+                });
+                catHtml += `</div></div>`;
+                return catHtml;
+            };
+            html += renderCategory(targetBook.cat);
+            if (clickedBook && clickedBook.cat !== targetBook.cat) html += renderCategory(clickedBook.cat);
+            
+            learningPanel.innerHTML = html;
+            learningPanel.classList.add('active');
+            
+            setTimeout(() => { if(window.innerWidth < 600) learningPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
+        });
+
+        btnNext.addEventListener('click', () => { round++; startRound(); });
+        btnRestart.addEventListener('click', () => { initGame(); });
+
+        // --- EXPLORATION MAP ---
+        btnExplore.addEventListener('click', () => {
+            isExplorationMode = true;
+            btnExplore.classList.remove('show');
+            feedbackDisplay.classList.remove('show');
+            gameStatsHeader.style.opacity = '0';
+            promptText.innerText = "Interactive Map";
+            promptText.style.color = "var(--accent)";
+            targetDisplay.innerText = "Hover to Explore";
+            targetDisplay.style.color = "#fff";
+            targetDisplay.classList.add('pulse-anim');
+            revealedCategories = []; 
+            drawWheel();
+        });
+
+        function handleHoverMove(e) {
+            if (!isExplorationMode) return;
+            if (e.type === 'touchmove') e.preventDefault();
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const x = (clientX - rect.left) * scaleX - cx;
+            const y = (clientY - rect.top) * scaleY - cy;
+
+            const clickRadius = Math.sqrt(x*x + y*y);
+            
+            if (clickRadius < innerRadius || clickRadius > outerRadius) {
+                if (currentHoverIndex !== -1) {
+                    currentHoverIndex = -1;
+                    targetDisplay.classList.add('pulse-anim');
+                    targetDisplay.innerText = "Hover to Explore";
+                    promptText.innerText = "Interactive Map";
+                    promptText.style.color = "var(--accent)";
+                    feedbackDisplay.classList.remove('show');
+                    drawWheel();
+                }
+                return;
+            }
+
+            let angle = Math.atan2(y, x) + Math.PI/2;
+            if (angle < 0) angle += 2 * Math.PI;
+
+            const hoverIndex = booksData.findIndex(b => angle >= b.startAngle && angle <= b.endAngle);
+            
+            if (hoverIndex !== -1 && hoverIndex !== currentHoverIndex) {
+                currentHoverIndex = hoverIndex;
+                const book = booksData[hoverIndex];
+                
+                targetDisplay.classList.remove('pulse-anim');
+                targetDisplay.innerText = book.name;
+                promptText.innerText = book.cat;
+                promptText.style.color = colors[book.cat];
+                feedbackDisplay.innerHTML = `<span style="color:#cbd5e1;">${book.ch} Chapters</span>`;
+                feedbackDisplay.classList.add('show');
+                
+                drawWheel();
+            }
+        }
+
+        canvas.addEventListener('mousemove', handleHoverMove);
+        canvas.addEventListener('touchmove', handleHoverMove, { passive: false });
+
+        // Start App
+        initGame();
+    </script>
+</body>
+</html>
