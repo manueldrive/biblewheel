@@ -934,7 +934,16 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             booksData.forEach((book, index) => {
-                const currentOuterRadius = (book === activeTouchBook) ? outerRadius + 20 : outerRadius;
+                // UPDATE: Check if the whole category should expand, or just the individual book
+                let isHovered = false;
+                if (activeTouchBook) {
+                    if (isRedemptionRound || isStudyMode) {
+                        isHovered = (book.cat === activeTouchBook.cat);
+                    } else {
+                        isHovered = (book === activeTouchBook);
+                    }
+                }
+                const currentOuterRadius = isHovered ? outerRadius + 20 : outerRadius;
 
                 ctx.beginPath();
                 ctx.arc(cx, cy, currentOuterRadius, book.startAngle - Math.PI/2, book.endAngle - Math.PI/2);
@@ -1010,10 +1019,24 @@
                 const isCategoryDivider = book.cat !== prevBook.cat;
                 const isTestamentDivider = book.testament !== prevBook.testament;
                 
+                // UPDATE: Dynamically calculate if the black divider lines should stretch outwards
+                let isBookHovered = false;
+                let isPrevHovered = false;
+                if (activeTouchBook) {
+                    if (isRedemptionRound || isStudyMode) {
+                        isBookHovered = (book.cat === activeTouchBook.cat);
+                        isPrevHovered = (prevBook.cat === activeTouchBook.cat);
+                    } else {
+                        isBookHovered = (book === activeTouchBook);
+                        isPrevHovered = (prevBook === activeTouchBook);
+                    }
+                }
+                const currentLineRadius = (isBookHovered || isPrevHovered) ? outerRadius + 20 : outerRadius;
+
                 ctx.beginPath();
                 const drawAngle = book.startAngle - Math.PI/2;
                 ctx.moveTo(cx + Math.cos(drawAngle) * innerRadius, cy + Math.sin(drawAngle) * innerRadius);
-                ctx.lineTo(cx + Math.cos(drawAngle) * outerRadius, cy + Math.sin(drawAngle) * outerRadius);
+                ctx.lineTo(cx + Math.cos(drawAngle) * currentLineRadius, cy + Math.sin(drawAngle) * currentLineRadius);
                 
                 if (introStage === 1 || introStage === 2) {
                     if (isTestamentDivider) {
