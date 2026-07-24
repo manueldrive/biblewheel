@@ -19,7 +19,7 @@
             margin: 0;
             padding: 0;
             background: #0f172a;
-            background-image: radial-gradient(circlea at top, #1e293b 0%, #0f172a 100%);
+            background-image: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             display: flex;
@@ -110,7 +110,6 @@
             color: #34d399;
         }
 
-        /* Redemption Badge Counter near scoreboard */
         .redemption-badge {
             display: none;
             align-items: center;
@@ -153,7 +152,6 @@
             100% { opacity: 0; transform: translateY(-25px) scale(1.2); }
         }
 
-        /* --- LAYOUT CONTROLS --- */
         .main-layout {
             display: flex;
             flex-direction: column;
@@ -189,7 +187,6 @@
             touch-action: none;
         }
 
-        /* --- CENTER UI ENGINE --- */
         .center-ui {
             position: absolute;
             top: 50%;
@@ -650,6 +647,10 @@
         let studyQueue = [];
         let studyIndex = -1; 
 
+        // Variables for touch/hover interactions
+        let activeTouchBook = null;
+        let lastTouchAngle = null;
+
         // --- DOM ELEMENTS ---
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
@@ -933,8 +934,10 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             booksData.forEach((book, index) => {
+                const currentOuterRadius = (book === activeTouchBook) ? outerRadius + 20 : outerRadius;
+
                 ctx.beginPath();
-                ctx.arc(cx, cy, outerRadius, book.startAngle - Math.PI/2, book.endAngle - Math.PI/2);
+                ctx.arc(cx, cy, currentOuterRadius, book.startAngle - Math.PI/2, book.endAngle - Math.PI/2);
                 ctx.arc(cx, cy, innerRadius, book.endAngle - Math.PI/2, book.startAngle - Math.PI/2, true);
                 ctx.closePath();
                 
@@ -1242,6 +1245,10 @@
             const clickedBook = booksData.find(b => angle >= b.startAngle && angle <= b.endAngle);
             if (!clickedBook) return;
 
+            processBookSelection(clickedBook, angle);
+        });
+
+        function processBookSelection(clickedBook, angle) {
             if (isStudyMode) {
                 selectStudyCategory(clickedBook.cat);
                 return;
@@ -1373,11 +1380,113 @@
                 }
                 pulseAnimationId = requestAnimationFrame(runPulseMacro);
             }
-        });
+        }
 
         btnNext.addEventListener('click', () => { 
             if (!isRedemptionRound) round++; 
             startRound(); 
+        });
+
+        // --- MOBILE TOUCH CONTROLS ---
+
+        function getTouchData(e) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            if (!touch) return null;
+            
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (touch.clientX - rect.left) * scaleX - cx;
+            const y = (touch.clientY - rect.top) * scaleY - cy;
+
+            const touchRadius = Math.sqrt(x*x + y*y);
+            if (touchRadius < innerRadius || touchRadius > outerRadius + 20) return null;
+
+            let angle = Math.atan2(y, x) + Math.PI/2;
+            if (angle < 0) angle += 2 * Math.PI;
+
+            const book = booksData.find(b => angle >= b.startAngle && angle <= b.endAngle);
+            return { book, angle };
+        }
+
+        function handleTouchMove(e) {
+            if (introStage > 0 || waitingForNextRound) return;
+            
+            // Prevent the whole web page from scrolling while dragging the wheel
+            e.preventDefault(); 
+            
+            const touchData = getTouchData(e);
+            const hoveredBook = touchData ? touchData.book : null;
+            
+            if (touchData) lastTouchAngle = touchData.angle;
+
+            // Only redraw if the finger moves to a different book
+            if (activeTouchBook !== hoveredBook) {
+                activeTouchBook = hoveredBook;
+                drawWheel();
+            }
+        }
+
+        // Track the initial touch and any movement
+        canvas.addEventListener('touchstart', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+        // Trigger the game logic when the finger is lifted
+        canvas.addEventListener('touchend', (e) => {
+            if (introStage > 0 || waitingForNextRound) return;
+            e.preventDefault();
+            
+            if (activeTouchBook && lastTouchAngle !== null) {
+                const selectedBook = activeTouchBook;
+                const selectedAngle = lastTouchAngle;
+                
+                // Reset states and visually drop the book back down
+                activeTouchBook = null;
+                lastTouchAngle = null;
+                drawWheel();
+                
+                // Run the game scoring logic
+                processBookSelection(selectedBook, selectedAngle);
+            }
+        });
+
+        // --- DESKTOP HOVER CONTROLS ---
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (introStage > 0 || waitingForNextRound) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX - cx;
+            const y = (e.clientY - rect.top) * scaleY - cy;
+
+            const hoverRadius = Math.sqrt(x*x + y*y);
+            let hoveredBook = null;
+
+            // Check if mouse is within the wheel boundaries
+            if (hoverRadius >= innerRadius && hoverRadius <= outerRadius + 20) {
+                let angle = Math.atan2(y, x) + Math.PI/2;
+                if (angle < 0) angle += 2 * Math.PI;
+                hoveredBook = booksData.find(b => angle >= b.startAngle && angle <= b.endAngle);
+            }
+
+            // Re-using the activeTouchBook variable to tell drawWheel() to expand it
+            if (activeTouchBook !== hoveredBook) {
+                activeTouchBook = hoveredBook;
+                // Change cursor to pointer when hovering over a valid book
+                canvas.style.cursor = hoveredBook ? 'pointer' : 'crosshair';
+                drawWheel();
+            }
+        });
+
+        // Drop the book back down if the mouse leaves the canvas entirely
+        canvas.addEventListener('mouseleave', () => {
+            if (activeTouchBook !== null) {
+                activeTouchBook = null;
+                canvas.style.cursor = 'crosshair';
+                drawWheel();
+            }
         });
 
         initGame();
