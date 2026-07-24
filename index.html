@@ -406,16 +406,20 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px; box-sizing: border-box; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-card { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; max-width: 450px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: scale(0.95); transition: transform 0.3s ease; display: flex; flex-direction: column; gap: 15px; }
+        .modal-card { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: scale(0.95); transition: transform 0.3s ease; display: flex; flex-direction: column; gap: 15px; }
         .modal-overlay.active .modal-card { transform: scale(1); }
         .modal-title { font-family: 'Cinzel', serif; font-size: 22px; color: #fff; margin: 0; }
         .modal-body { font-size: 14px; color: #cbd5e1; line-height: 1.6; margin: 0; }
-        .modal-save, .modal-cancel { align-self: flex-end; background: rgba(255, 255, 255, 0.1); border: none; color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
+        .modal-save, .modal-cancel { background: rgba(255, 255, 255, 0.1); border: none; color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
         .modal-save:hover, .modal-cancel:hover { background: rgba(255, 255, 255, 0.2); }
         .radio-group { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
         .radio-label { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
         .radio-label:hover { background: rgba(0,0,0,0.4); border-color: var(--accent); }
         input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; }
+        
+        .theme-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+        .theme-label { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; font-size: 14px; flex: 1; justify-content: center; }
+        .theme-label:hover { background: rgba(0,0,0,0.4); border-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -482,26 +486,42 @@
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-title"><i class="fa-solid fa-gear"></i> Settings</div>
-            <p class="modal-body">Choose your preferred Old Testament structure. Changing this will restart your current game.</p>
-            <div class="radio-group">
-                <label class="radio-label">
-                    <input type="radio" name="ot_mode" value="traditional" checked>
-                    <div>
-                        <strong>Traditional (Christian)</strong>
-                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Law, History, Wisdom, Major Prophets, Minor Prophets.</div>
-                    </div>
-                </label>
-                <label class="radio-label">
-                    <input type="radio" name="ot_mode" value="tanakh">
-                    <div>
-                        <strong>Tanakh (Hebrew Bible)</strong>
-                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Torah, Nevi'im (Prophets), Ketuvim (Writings).</div>
-                    </div>
-                </label>
+            
+            <div style="margin-top: 5px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Wheel Layout</div>
+                <div class="radio-group" style="margin-top: 0;">
+                    <label class="radio-label">
+                        <input type="radio" name="ot_mode" value="traditional" checked>
+                        <div>
+                            <strong>Traditional (Christian)</strong>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Law, History, Wisdom, Major Prophets, Minor Prophets.</div>
+                        </div>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="ot_mode" value="tanakh">
+                        <div>
+                            <strong>Tanakh (Hebrew Bible)</strong>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Torah, Nevi'im (Prophets), Ketuvim (Writings).</div>
+                        </div>
+                    </label>
+                </div>
             </div>
-            <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                <button class="modal-cancel" id="settings-cancel-btn">Cancel</button>
-                <button class="modal-save" id="settings-save-btn" style="background:var(--accent); color:#000;">Apply & Restart</button>
+
+            <div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Color Theme</div>
+                <div class="theme-group">
+                    <label class="theme-label"><input type="radio" name="color_theme" value="classic" checked> Classic</label>
+                    <label class="theme-label"><input type="radio" name="color_theme" value="ocean"> Ocean</label>
+                    <label class="theme-label"><input type="radio" name="color_theme" value="sunset"> Sunset</label>
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content: space-between; margin-top: 15px; align-items: center;">
+                <button class="modal-save" id="settings-study-btn" style="background:rgba(255, 255, 255, 0.05); color:#fff; border: 1px solid rgba(255, 255, 255, 0.2);">Go to Study Mode</button>
+                <div style="display:flex; gap: 10px;">
+                    <button class="modal-cancel" id="settings-cancel-btn">Cancel</button>
+                    <button class="modal-save" id="settings-save-btn" style="background:var(--accent); color:#000;">Apply & Restart</button>
+                </div>
             </div>
         </div>
     </div>
@@ -592,11 +612,27 @@
             "Prophecy (NT)": "Uses apocalyptic imagery to comfort believers and unveil the ultimate victory of Christ."
         };
 
-        const colors = {
+        // --- COLOR THEMES ---
+        const themeClassic = {
             "Law": "#b91c1c", "History (OT)": "#d97706", "Wisdom": "#15803d", "Major Prophets": "#6d28d9", "Minor Prophets": "#4338ca",
             "Torah": "#b91c1c", "Nevi'im": "#d97706", "Ketuvim": "#15803d",
             "Gospels": "#b91c1c", "History (NT)": "#d97706", "Pauline Epistles": "#15803d", "General Epistles": "#6d28d9", "Prophecy (NT)": "#4338ca"
         };
+        
+        const themeOcean = {
+            "Law": "#0369a1", "History (OT)": "#0f766e", "Wisdom": "#047857", "Major Prophets": "#4338ca", "Minor Prophets": "#1d4ed8",
+            "Torah": "#0369a1", "Nevi'im": "#0f766e", "Ketuvim": "#047857",
+            "Gospels": "#0369a1", "History (NT)": "#0f766e", "Pauline Epistles": "#047857", "General Epistles": "#4338ca", "Prophecy (NT)": "#1d4ed8"
+        };
+        
+        const themeSunset = {
+            "Law": "#be123c", "History (OT)": "#c2410c", "Wisdom": "#b45309", "Major Prophets": "#9f1239", "Minor Prophets": "#a21caf",
+            "Torah": "#be123c", "Nevi'im": "#c2410c", "Ketuvim": "#b45309",
+            "Gospels": "#be123c", "History (NT)": "#c2410c", "Pauline Epistles": "#b45309", "General Epistles": "#9f1239", "Prophecy (NT)": "#a21caf"
+        };
+
+        let currentTheme = 'classic';
+        let colors = themeClassic;
 
         const ntBooks = [
             { name: "Matthew", ch: 28, cat: "Gospels", testament: "NT" }, { name: "Mark", ch: 16, cat: "Gospels", testament: "NT" }, { name: "Luke", ch: 24, cat: "Gospels", testament: "NT" }, { name: "John", ch: 21, cat: "Gospels", testament: "NT" },
@@ -697,14 +733,18 @@
             return `rgba(${r}, ${g}, ${b}, ${opacity})`;
         }
 
-        function initGame() {
+        function initGame(skipIntro = false) {
             booksData = currentMode === 'traditional' ? [...otTraditionalBooks, ...ntBooks] : [...otTanakhBooks, ...ntBooks];
             currentCategories = [...new Set(booksData.map(b => b.cat))];
 
-            const totalChapters = booksData.reduce((sum, book) => sum + book.ch, 0);
+            // Add an artificial +4 flat weight to chapter counts solely for rendering sizes. 
+            // This ensures 1-chapter books are a bit larger and strictly preserves relative size logic.
+            const totalVisualChapters = booksData.reduce((sum, book) => sum + book.ch + 4, 0);
             let currentAngle = 0;
+            
             booksData.forEach((book) => {
-                const angleSpan = (book.ch / totalChapters) * (2 * Math.PI);
+                const visualCh = book.ch + 4;
+                const angleSpan = (visualCh / totalVisualChapters) * (2 * Math.PI);
                 book.startAngle = currentAngle;
                 book.endAngle = currentAngle + angleSpan;
                 book.midAngle = currentAngle + (angleSpan / 2);
@@ -734,7 +774,17 @@
             feedbackDisplay.classList.remove('show');
             gameStatsHeader.style.opacity = '1';
 
-            playEducationalIntro();
+            currentIntroId++; // Cancels any running intro loop if re-initialized
+
+            if (skipIntro) {
+                introStage = 0;
+                centerFlipper.classList.remove('intro-active');
+                targetDisplay.classList.remove('intro-mode');
+                targetDisplay.style.color = '';
+                promptText.style.display = 'block';
+            } else {
+                playEducationalIntro();
+            }
         }
 
         function startNewGameFast() {
@@ -772,7 +822,7 @@
         }
 
         async function playEducationalIntro() {
-            const introId = ++currentIntroId; 
+            const introId = currentIntroId; 
             centerUi.classList.remove('action-required');
             targetDisplay.classList.remove('pulse-anim');
             targetDisplay.classList.add('intro-mode');
@@ -851,7 +901,7 @@
             drawWheel();
         }
 
-        btnStudy.addEventListener('click', () => {
+        function activateStudyMode() {
             isStudyMode = true;
             mainLayout.classList.add('study-active');
             
@@ -863,6 +913,27 @@
             centerFlipper.classList.remove('flipped');
             
             resetStudyToMenu();
+        }
+
+        btnStudy.addEventListener('click', activateStudyMode);
+
+        document.getElementById('settings-study-btn').addEventListener('click', () => {
+            const selectedMode = document.querySelector('input[name="ot_mode"]:checked').value;
+            const selectedTheme = document.querySelector('input[name="color_theme"]:checked').value;
+            
+            let changed = false;
+            if(selectedMode !== currentMode) { currentMode = selectedMode; changed = true; }
+            if(selectedTheme !== currentTheme) {
+                currentTheme = selectedTheme;
+                if(currentTheme === 'classic') colors = themeClassic;
+                else if(currentTheme === 'ocean') colors = themeOcean;
+                else if(currentTheme === 'sunset') colors = themeSunset;
+                changed = true;
+            }
+            
+            initGame(true); // Pass true to skip the intro animation completely
+            settingsModal.classList.remove('active');
+            activateStudyMode();
         });
 
         btnRestart.addEventListener('click', startNewGameFast);
@@ -921,7 +992,19 @@
         document.getElementById('settings-cancel-btn').addEventListener('click', () => settingsModal.classList.remove('active'));
         document.getElementById('settings-save-btn').addEventListener('click', () => {
             const selectedMode = document.querySelector('input[name="ot_mode"]:checked').value;
-            if(selectedMode !== currentMode) { currentMode = selectedMode; initGame(); }
+            const selectedTheme = document.querySelector('input[name="color_theme"]:checked').value;
+            
+            let changed = false;
+            if(selectedMode !== currentMode) { currentMode = selectedMode; changed = true; }
+            if(selectedTheme !== currentTheme) {
+                currentTheme = selectedTheme;
+                if(currentTheme === 'classic') colors = themeClassic;
+                else if(currentTheme === 'ocean') colors = themeOcean;
+                else if(currentTheme === 'sunset') colors = themeSunset;
+                changed = true;
+            }
+            
+            if (changed) initGame();
             settingsModal.classList.remove('active');
         });
 
@@ -934,10 +1017,9 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             booksData.forEach((book, index) => {
-                // UPDATE: Check if the whole category should expand, or just the individual book
                 let isHovered = false;
-                if (activeTouchBook) {
-                    if (isRedemptionRound || isStudyMode) {
+                if (activeTouchBook && !isStudyMode) {
+                    if (isRedemptionRound) {
                         isHovered = (book.cat === activeTouchBook.cat);
                     } else {
                         isHovered = (book === activeTouchBook);
@@ -1019,11 +1101,10 @@
                 const isCategoryDivider = book.cat !== prevBook.cat;
                 const isTestamentDivider = book.testament !== prevBook.testament;
                 
-                // UPDATE: Dynamically calculate if the black divider lines should stretch outwards
                 let isBookHovered = false;
                 let isPrevHovered = false;
-                if (activeTouchBook) {
-                    if (isRedemptionRound || isStudyMode) {
+                if (activeTouchBook && !isStudyMode) {
+                    if (isRedemptionRound) {
                         isBookHovered = (book.cat === activeTouchBook.cat);
                         isPrevHovered = (prevBook.cat === activeTouchBook.cat);
                     } else {
